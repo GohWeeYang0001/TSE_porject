@@ -249,12 +249,7 @@
                                         
                                         <a href="?action=view&id='.$docid.'" class="non-style-link"><button  class="btn-primary-soft btn button-icon btn-view"  style="padding-left: 40px;padding-top: 12px;padding-bottom: 12px;margin-top: 10px;"><font class="tn-in-text">View</font></button></a>
                                        &nbsp;&nbsp;&nbsp;
-                                       <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:10px;">
-                                        <a href="schedule.php?search=<?php echo urlencode($name); ?>" class="non-style-link">
-                                                <button class="btn-primary-soft btn button-icon menu-icon-session-active" style="...">
-                                                    <font class="tn-in-text">Sessions</font>
-                                                </button>
-                                            </a>
+                                       <a href="?action=session&id='.$docid.'&name='.$name.'"  class="non-style-link"><button  class="btn-primary-soft btn button-icon menu-icon-session-active"  style="padding-left: 40px;padding-top: 12px;padding-bottom: 12px;margin-top: 10px;"><font class="tn-in-text">Sessions</font></button></a>
                                         </div>
                                         </td>
                                     </tr>';
@@ -409,6 +404,33 @@
                         </div>
                     </center>
                     <br><br>
+            </div>
+            </div>
+            ';
+        }elseif($action=='session'){
+            $name=$_GET["name"];
+            echo '
+            <div id="popup1" class="overlay">
+                    <div class="popup">
+                    <center>
+                        <h2>Redirect to Doctors sessions?</h2>
+                        <a class="close" href="doctors.php">&times;</a>
+                        <div class="content">
+                            You want to view All sessions by <br>('.substr($name,0,40).').
+                            
+                        </div>
+                        <form action="schedule.php" method="post" style="display: flex">
+
+                                <input type="hidden" name="search" value="'.$name.'">
+
+                                
+                        <div style="display: flex;justify-content:center;margin-left:45%;margin-top:6%;;margin-bottom:6%;">
+                        
+                        <input type="submit"  value="Yes" class="btn-primary btn"   >
+                        
+                        
+                        </div>
+                    </center>
             </div>
             </div>
             ';
