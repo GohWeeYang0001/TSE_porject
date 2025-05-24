@@ -257,10 +257,32 @@
                                                 if ($scheduleid == "") {
                                                     break;
                                                 }
-                                                $disabled = ($nop <= 0) ? "disabled" : "";
-                                                $btnClass = ($nop <= 0) ? "login-btn btn-disabled btn" : "login-btn btn-primary-soft btn";
-                                                $buttonText = ($nop > 0) ? "Book Now" : "Fully Booked";
-                                                $linkHref = ($nop > 0) ? "booking.php?id=" . $scheduleid : "#";
+                                                // 检查当前用户是否已经预约这个 session
+                                                $checkBookingSql = "SELECT * FROM appointment WHERE pid = ? AND scheduleid = ?";
+                                                $stmtCheck = $database->prepare($checkBookingSql);
+                                                $stmtCheck->bind_param("ii", $userid, $scheduleid); // 假设 $userid 是登录用户的 ID
+                                                $stmtCheck->execute();
+                                                $bookingResult = $stmtCheck->get_result();
+                                                $isBooked = ($bookingResult->num_rows > 0);
+
+                                                // 按钮逻辑
+                                                if ($nop <= 0) {
+                                                    $disabled = "disabled";
+                                                    $btnClass = "login-btn btn-disabled btn";
+                                                    $buttonText = "Fully Booked";
+                                                    $linkHref = "#";
+                                                } elseif ($isBooked) {
+                                                    $disabled = "disabled";
+                                                    $btnClass = "login-btn btn-disabled btn";
+                                                    $buttonText = "Already Booked";
+                                                    $linkHref = "#";
+                                                } else {
+                                                    $disabled = "";
+                                                    $btnClass = "login-btn btn-primary-soft btn";
+                                                    $buttonText = "Book Now";
+                                                    $linkHref = "booking.php?id=" . $scheduleid;
+                                                }
+
 
                                                 echo '
         <td style="width: 25%;">
