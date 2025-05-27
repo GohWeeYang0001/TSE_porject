@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JS Auto Email Reminder</title>
+</head>
+<body>
+    <p id="status">Waiting for next run...</p>
+    <script>
+        function sendReminder() {
+            fetch("send_appointment_reminders.php")
+                .then(res => res.text())
+                .then(data => {
+                    const time = new Date().toLocaleTimeString();
+                    document.getElementById("status").innerHTML = "Last run at " + time;
+                    console.log("Reminder triggered at", time);
+                })
+                .catch(error => {
+                    document.getElementById("status").innerHTML = "Error at " + new Date().toLocaleTimeString();
+                    console.error("Error sending reminder:", error);
+                });
+        }
+
+        // 立即执行一次
+        sendReminder();
+
+        // 每5分钟执行一次
+        setInterval(sendReminder, 1 * 60 * 1000);
+    </script>
+</body>
+</html>
