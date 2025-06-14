@@ -111,10 +111,20 @@
             <tr>
                 <td width="13%">
                     <form action="generate_pdf.php" method="post">
-                        <button type="submit" class="btn btn-primary" style="padding: 10px 20px; margin-left: 20px; width: 150px; border-radius: 8px; font-weight: bold; font-size: 14px; background-color: #007BFF; color: white; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;">
-                            Download PDF
-                        </button>
+                        <label for="doctorFilter">Select Doctor: </label>
+                        <select name="doctor" id="doctorFilter">
+                            <option value="all">All Doctors</option>
+                            <?php
+                            // Fetch the list of doctor names from the database
+                            $list = $database->query("SELECT docid, docname FROM doctor");
+                            while ($row = $list->fetch_assoc()) {
+                                echo "<option value='" . $row['docid'] . "'>" . $row['docname'] . "</option>";
+                            }
+                            ?>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Generate PDF</button>
                     </form>
+
                 </td>
 
                 <td>

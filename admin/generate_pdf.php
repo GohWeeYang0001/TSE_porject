@@ -3,7 +3,7 @@ ob_start();
 require_once(__DIR__ . '/TCPDF-main/tcpdf.php');
 include("../connection.php");
 
-// 创建 TCPDF 实例
+// Create TCPDF instance
 $pdf = new TCPDF();
 $pdf->SetCreator(PDF_CREATOR);
 $pdf->SetAuthor('DocAP System');
@@ -12,11 +12,11 @@ $pdf->SetMargins(15, 20, 15);
 $pdf->AddPage();
 $pdf->SetFont('helvetica', '', 11);
 
-// Logo 路径 & 系统名称
+// Logo Path & System Name
 $logoPath = __DIR__ . '../img/logo.png';
 $systemName = "DocAP";
 
-// Logo + 标题区
+// Header Section (Logo + Title)
 $header = '
 <table cellspacing="0" cellpadding="5">
     <tr>
@@ -27,14 +27,19 @@ $header = '
 ';
 $pdf->writeHTML($header, true, false, true, false, '');
 
-// 获取统计数据
+// Get the selected doctor from POST, default to 'all' for all doctors
+$doctorId = isset($_POST['doctor']) ? $_POST['doctor'] : 'all';
+
+// Get the current date
 $today = date("Y-m-d");
+
+// Query to get the total number of doctors and appointments
 $doc_result = mysqli_query($database, "SELECT COUNT(*) as doc_count FROM doctor");
 $app_result = mysqli_query($database, "SELECT COUNT(*) as app_count FROM appointment");
 $doc_count = mysqli_fetch_assoc($doc_result)['doc_count'];
 $app_count = mysqli_fetch_assoc($app_result)['app_count'];
 
-// 信息区域
+// Summary Section
 $summaryHTML = "
 <table cellpadding=\"6\">
     <tr>
@@ -50,7 +55,7 @@ $summaryHTML = "
 ";
 $pdf->writeHTML($summaryHTML, true, false, true, false, '');
 
-// 表头 + 数据表格
+// Table Header + Data Table
 $tableHTML = '
 <style>
     th {
@@ -73,15 +78,29 @@ $tableHTML = '
     <th width="20%">Appointment Count</th>
 </tr>';
 
-$query = "
-    SELECT d.docname, d.docemail, d.doctel, s.sname, COUNT(a.appoid) AS appointment_count
-    FROM doctor d
-    LEFT JOIN specialties s ON d.specialties = s.id
-    LEFT JOIN schedule sch ON d.docid = sch.docid
-    LEFT JOIN appointment a ON sch.scheduleid = a.scheduleid
-    GROUP BY d.docid
-";
+// Modify the query based on the selected doctor
+if ($doctorId != 'all') {
+    $query = "
+        SELECT d.docname, d.docemail, d.doctel, s.sname, COUNT(a.appoid) AS appointment_count
+        FROM doctor d
+        LEFT JOIN specialties s ON d.specialties = s.id
+        LEFT JOIN schedule sch ON d.docid = sch.docid
+        LEFT JOIN appointment a ON sch.scheduleid = a.scheduleid
+        WHERE d.docid = $doctorId
+        GROUP BY d.docid
+    ";
+} else {
+    $query = "
+        SELECT d.docname, d.docemail, d.doctel, s.sname, COUNT(a.appoid) AS appointment_count
+        FROM doctor d
+        LEFT JOIN specialties s ON d.specialties = s.id
+        LEFT JOIN schedule sch ON d.docid = sch.docid
+        LEFT JOIN appointment a ON sch.scheduleid = a.scheduleid
+        GROUP BY d.docid
+    ";
+}
 
+// Execute the query
 $result = mysqli_query($database, $query);
 while ($row = mysqli_fetch_assoc($result)) {
     $tableHTML .= "<tr>
@@ -96,7 +115,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 $tableHTML .= "</table>";
 $pdf->writeHTML($tableHTML, true, false, true, false, '');
 
-// 清除缓冲区，输出 PDF
+// Clean buffer and output PDF
 ob_end_clean();
 $pdf->Output('doctor_summary.pdf', 'D');
 ?>

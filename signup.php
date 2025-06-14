@@ -9,13 +9,22 @@
     <link rel="stylesheet" href="css/signup.css">
         
     <title>Sign Up</title>
-    
+    <style>
+        .error-message {
+            color: red;
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+
 </head>
 <body>
 <?php
 
 //learn from w3schools.com
 //Unset all the server side variables
+// Initialize error message variable
+$error = '';
 
 session_start();
 
@@ -25,35 +34,52 @@ $_SESSION["usertype"]="";
 // Set the new timezone
 date_default_timezone_set('Asia/Kolkata');
 $date = date('Y-m-d');
-
 $_SESSION["date"]=$date;
 
+// Include database connection
+include("connection.php");
 
-
-if($_POST){
-
+if ($_POST) {
+    $fname = $_POST['fname'];
+    $lname = $_POST['lname'];
+    $name = $fname . " " . $lname;
+    $address = $_POST['address'];
+    $nic = $_POST['nic'];
+    $dob = $_POST['dob'];
     
-
-    $_SESSION["personal"]=array(
-        'fname'=>$_POST['fname'],
-        'lname'=>$_POST['lname'],
-        'address'=>$_POST['address'],
-        'nic'=>$_POST['nic'],
-        'dob'=>$_POST['dob']
+    // Initialize the session values with the form data to preserve them
+    $_SESSION['personal'] = array(
+        'fname' => $fname,
+        'lname' => $lname,
+        'address' => $address,
+        'nic' => $nic,
+        'dob' => $dob
     );
+    
+    // Check if name or NIC already exists in the database
+    $stmt = $database->prepare("SELECT * FROM patient WHERE pname = ? OR pnic = ?");
+    $stmt->bind_param("ss", $name, $nic);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-
-    print_r($_SESSION["personal"]);
-    header("location: create-account.php");
-
-
-
-
+    if ($result->num_rows > 0) {
+        // Set error message for specific fields if they are duplicated
+        $error = '<label for="promter" class="form-label error-message">Name or NIC already exists in the database. Please try again.</label>';
+    } else {
+        // Store the personal details in session for use in create-account.php
+        $_SESSION["personal"] = array(
+            'fname' => $fname,
+            'lname' => $lname,
+            'address' => $address,
+            'nic' => $nic,
+            'dob' => $dob
+        );
+        // Redirect to create-account.php
+        header("location: create-account.php");
+        exit;
+    }
 }
-
 ?>
-
-
     <center>
     <div class="container">
         <table border="0">
@@ -64,17 +90,17 @@ if($_POST){
                 </td>
             </tr>
             <tr>
-                <form action="" method="POST" >
+                <form action="" method="POST">
                 <td class="label-td" colspan="2">
                     <label for="name" class="form-label">Name: </label>
                 </td>
             </tr>
             <tr>
                 <td class="label-td">
-                    <input type="text" name="fname" class="input-text" placeholder="First Name" required>
+                    <input type="text" name="fname" class="input-text" placeholder="First Name" value="<?php echo isset($_SESSION['personal']['fname']) ? $_SESSION['personal']['fname'] : ''; ?>" required>
                 </td>
                 <td class="label-td">
-                    <input type="text" name="lname" class="input-text" placeholder="Last Name" required>
+                    <input type="text" name="lname" class="input-text" placeholder="Last Name" value="<?php echo isset($_SESSION['personal']['lname']) ? $_SESSION['personal']['lname'] : ''; ?>" required>
                 </td>
             </tr>
             <tr>
@@ -84,7 +110,7 @@ if($_POST){
             </tr>
             <tr>
                 <td class="label-td" colspan="2">
-                    <input type="text" name="address" class="input-text" placeholder="Address" required>
+                    <input type="text" name="address" class="input-text" placeholder="Address" value="<?php echo isset($_SESSION['personal']['address']) ? $_SESSION['personal']['address'] : ''; ?>" required>
                 </td>
             </tr>
             <tr>
@@ -94,7 +120,7 @@ if($_POST){
             </tr>
             <tr>
                 <td class="label-td" colspan="2">
-                    <input type="text" name="nic" class="input-text" placeholder="NIC Number" required>
+                    <input type="text" name="nic" class="input-text" placeholder="NIC Number" value="<?php echo isset($_SESSION['personal']['nic']) ? $_SESSION['personal']['nic'] : ''; ?>" required>
                 </td>
             </tr>
             <tr>
@@ -104,14 +130,14 @@ if($_POST){
             </tr>
             <tr>
                 <td class="label-td" colspan="2">
-                    <input type="date" name="dob" class="input-text" required>
+                    <input type="date" name="dob" class="input-text" value="<?php echo isset($_SESSION['personal']['dob']) ? $_SESSION['personal']['dob'] : ''; ?>" required>
                 </td>
             </tr>
             <tr>
-                <td class="label-td" colspan="2">
+                <td colspan="2">
+                    <?php echo $error; ?>
                 </td>
             </tr>
-
             <tr>
                 <td>
                     <input type="reset" value="Reset" class="login-btn btn-primary-soft btn" >
@@ -119,7 +145,6 @@ if($_POST){
                 <td>
                     <input type="submit" value="Next" class="login-btn btn-primary btn">
                 </td>
-
             </tr>
             <tr>
                 <td colspan="2">
@@ -129,8 +154,7 @@ if($_POST){
                     <br><br><br>
                 </td>
             </tr>
-
-                    </form>
+                </form>
             </tr>
         </table>
 
